@@ -13,6 +13,7 @@ import com.vitregram.tv.domain.usecase.*
 import com.vitregram.tv.presentation.auth.AuthScreen
 import com.vitregram.tv.presentation.auth.AuthViewModel
 import com.vitregram.tv.presentation.explore.ExploreScreen
+import com.vitregram.tv.presentation.explore.ExploreViewModel
 import com.vitregram.tv.presentation.home.HomeScreen
 import com.vitregram.tv.presentation.home.HomeViewModel
 import com.vitregram.tv.presentation.notifications.NotificationsScreen
@@ -115,8 +116,9 @@ fun TvNavGraph(
                 }
 
                 composable(Screen.Explore.route) {
+                    val exploreVm = remember { ExploreViewModel(repository) }
                     ExploreScreen(
-                        repository = repository,
+                        viewModel = exploreVm,
                         onOpenPost = { navController.navigate(Screen.Reels.route) }
                     )
                 }

@@ -11,9 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vitregram.tv.domain.model.NetworkResult
 import com.vitregram.tv.domain.model.Post
-import com.vitregram.tv.domain.repository.InstagramRepository
 import com.vitregram.tv.ui.components.ErrorView
 import com.vitregram.tv.ui.components.LoadingView
 import com.vitregram.tv.ui.components.MediaCard
@@ -22,87 +20,50 @@ import com.vitregram.tv.ui.theme.TextPrimary
 
 @Composable
 fun ExploreScreen(
-    repository: InstagramRepository,
+    viewModel: ExploreViewModel,
     onOpenPost: (Post) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
 
-    val coroutineScope = rememberCoroutineScope()
-
-    fun loadExplore() {
-        isLoading = true
-        errorMessage = null
-        coroutineScope.launch {
-            when (val result = repository.getExplore()) {
-                is NetworkResult.Success -> {
-                    posts = result.data
-                    isLoading = false
-                }
-                is NetworkResult.Error -> {
-                    errorMessage = result.message
-                    isLoading = false
-                }
-                else -> {
-                    isLoading = false
-                }
-            }
+    when (val state = uiState) {
+        is ExploreUiState.Loading -> {
+            LoadingView(message = "Loading Explore grid...")
         }
-    }
-
-    LaunchedEffect(Unit) {
-        when (val result = repository.getExplore()) {
-            is NetworkResult.Success -> {
-                posts = result.data
-                isLoading = false
-            }
-            is NetworkResult.Error -> {
-                errorMessage = result.message
-                isLoading = false
-            }
-            else -> {
-                isLoading = false
-            }
+        is ExploreUiState.Error -> {
+            ErrorView(
+                message = state.message,
+                onRetry = { viewModel.loadExplore() }
+            )
         }
-    }
-
-    if (isLoading) {
-        LoadingView(message = "Loading Explore grid...")
-        return
-    }
-
-    if (errorMessage != null) {
-        ErrorView(message = errorMessage ?: "Failed to load explore", onRetry = { loadExplore() })
-        return
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(ObsidianBackground)
-            .padding(horizontal = 32.dp, vertical = 24.dp)
-    ) {
-        Text(
-            text = "Explore",
-            color = TextPrimary,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
-
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 180.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(posts, key = { it.id }) { post ->
-                MediaCard(
-                    post = post,
-                    onClick = { onOpenPost(post) }
+        is ExploreUiState.Success -> {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(ObsidianBackground)
+                    .padding(horizontal = 32.dp, vertical = 24.dp)
+            ) {
+                Text(
+                    text = "Explore",
+                    color = TextPrimary,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 20.dp)
                 )
+
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 180.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(state.posts, key = { it.id }) { post ->
+                        MediaCard(
+                            post = post,
+                            onClick = { onOpenPost(post) }
+                        )
+                    }
+                }
             }
         }
     }
