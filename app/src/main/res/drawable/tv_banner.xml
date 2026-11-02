@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Obsidian Dark Background -->
+    <path
+        android:fillColor="#08090D"
+        android:pathData="M0,0h320v180h-320z" />
+
+    <!-- Glass accent subtle gradient -->
+    <path
+        android:pathData="M20,20h280v140h-280z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="20"
+                android:startY="20"
+                android:endX="300"
+                android:endY="160"
+                android:type="linear">
+                <item android:color="#1A1D26" android:offset="0.0" />
+                <item android:color="#0F1117" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Instagram Camera Glyph Outline -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M140,70 h40 a15,15 0 0 1 15,15 v40 a15,15 0 0 1 -15,15 h-40 a15,15 0 0 1 -15,-15 v-40 a15,15 0 0 1 15,-15 z" />
+
+    <!-- Camera Lens Circle -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:fillColor="#00000000"
+        android:pathData="M160,105 m-15,0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0" />
+
+    <!-- Camera Flash Dot -->
+    <path
+        android:fillColor="#E1306C"
+        android:pathData="M183,82 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

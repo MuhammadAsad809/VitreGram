@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VitreGram</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_reels">Reels</string>
+    <string name="nav_stories">Stories</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_messages">Messages</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Settings</string>
+    <string name="login_with_qr">Scan QR Code with Phone</string>
+    <string name="login_with_web">Sign In via Instagram Web Session</string>
+    <string name="login_desc">VitreGram accesses your existing Instagram account using secure session authentication. No passwords stored.</string>
+</resources>

@@ -1,0 +1,114 @@
+name: Build VitreGram TV APK
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build Type (all, debug, release)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - debug
+          - release
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Compile & Package Android TV APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensure gradlew is executable
+        run: chmod +x gradlew
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Signing Keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Decoding release keystore from GitHub Secrets..."
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          else
+            echo "Generating build keystore for CI signing..."
+            keytool -genkeypair -v \
+              -keystore release.keystore \
+              -alias vitregram \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass vitregram_ci_password \
+              -keypass vitregram_ci_password \
+              -dname "CN=VitreGram TV, OU=Android, O=VitreGram, L=San Francisco, ST=CA, C=US"
+          fi
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Build Debug APK
+        if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'debug' || github.event_name == 'push' || github.event_name == 'pull_request' }}
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Build Release APK
+        if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'release' || github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          KEYSTORE_PASSWORD: "vitregram_ci_password"
+          KEY_ALIAS: "vitregram"
+          KEY_PASSWORD: "vitregram_ci_password"
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate & Organize Generated APKs
+        run: |
+          mkdir -p output-apks
+          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp app/build/outputs/apk/debug/app-debug.apk output-apks/VitreGram-TV-v1.0.0-debug.apk
+          fi
+          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/build/outputs/apk/release/app-release.apk output-apks/VitreGram-TV-v1.0.0-release.apk
+          fi
+          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            cp app/build/outputs/apk/release/app-release-unsigned.apk output-apks/VitreGram-TV-v1.0.0-release-unsigned.apk
+          fi
+          echo "Output files ready:"
+          ls -lh output-apks/
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: VitreGram-AndroidTV-APKs
+          path: output-apks/*.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output-apks/*.apk
+          name: VitreGram TV ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true

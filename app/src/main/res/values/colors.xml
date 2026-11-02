@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Obsidian Palette -->
+    <color name="obsidian_background">#08090D</color>
+    <color name="obsidian_surface">#12141A</color>
+    <color name="obsidian_card">#1A1D26</color>
+    <color name="obsidian_glass_border">#2E3342</color>
+    <color name="obsidian_focus_glow">#4C556B</color>
+
+    <!-- Instagram Accent Gradients -->
+    <color name="ig_yellow">#FCAF45</color>
+    <color name="ig_orange">#FF543E</color>
+    <color name="ig_pink">#E1306C</color>
+    <color name="ig_purple">#C13584</color>
+    <color name="ig_blue">#405DE6</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="text_secondary">#8E95A5</color>
+    <color name="text_muted">#585E70</color>
+</resources>

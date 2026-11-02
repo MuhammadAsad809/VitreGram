@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme targeting TV -->
+    <style name="Theme.VitreGram" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/obsidian_background</item>
+        <item name="android:statusBarColor">@color/obsidian_background</item>
+        <item name="android:navigationBarColor">@color/obsidian_background</item>
+    </style>
+</resources>
