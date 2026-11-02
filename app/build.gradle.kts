@@ -103,8 +103,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Jetpack Compose for TV (Leanback next-gen)
-    implementation("androidx.tv:tv-foundation:1.0.0-alpha11")
-    implementation("androidx.tv:tv-material:1.0.0-alpha11")
+    implementation("androidx.tv:tv-foundation:1.0.0")
+    implementation("androidx.tv:tv-material:1.0.0")
 
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
