@@ -99,7 +99,7 @@ fun StoriesScreen(
                         else -> 0f
                     }
                     LinearProgressIndicator(
-                        progress = { segmentProgress },
+                        progress = segmentProgress,
                         color = Color.White,
                         trackColor = Color.White.copy(alpha = 0.25f),
                         modifier = Modifier

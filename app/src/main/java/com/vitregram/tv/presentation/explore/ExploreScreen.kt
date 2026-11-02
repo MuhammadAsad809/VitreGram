@@ -30,10 +30,12 @@ fun ExploreScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val coroutineScope = rememberCoroutineScope()
+
     fun loadExplore() {
         isLoading = true
         errorMessage = null
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launchWhenStarted {
+        coroutineScope.launch {
             when (val result = repository.getExplore()) {
                 is NetworkResult.Success -> {
                     posts = result.data

@@ -312,7 +312,11 @@ class WebSessionAdapter(
         val isLiked = media.get("has_liked")?.asBoolean ?: false
 
         val mediaUrl = extractBestImageUrl(media)
-        val mediaType = if (media.get("media_type")?.asInt == 2) MediaType.VIDEO else MediaType.IMAGE
+        val mediaType = if (media.get("media_type")?.asInt == 2) {
+            com.vitregram.tv.domain.model.MediaType.VIDEO
+        } else {
+            com.vitregram.tv.domain.model.MediaType.IMAGE
+        }
 
         return Post(
             id = id,

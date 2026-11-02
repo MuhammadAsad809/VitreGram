@@ -179,8 +179,12 @@ private fun SidebarButton(
                 .width(4.dp)
                 .height(24.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(
-                    if (isSelected || isFocused) InstagramGradient else Color.Transparent
+                .then(
+                    if (isSelected || isFocused) {
+                        Modifier.background(InstagramGradient)
+                    } else {
+                        Modifier.background(Color.Transparent)
+                    }
                 )
         )
 
