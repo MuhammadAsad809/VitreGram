@@ -72,11 +72,11 @@ jobs:
           fi
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+        run: ./gradlew testDebugUnitTest --no-daemon --no-parallel --stacktrace
 
       - name: Build Debug APK
         if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'debug' || github.event_name == 'push' || github.event_name == 'pull_request' }}
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --no-parallel --stacktrace
 
       - name: Build Release APK
         if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'release' || github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v') }}
@@ -84,7 +84,7 @@ jobs:
           KEYSTORE_PASSWORD: "vitregram_ci_password"
           KEY_ALIAS: "vitregram"
           KEY_PASSWORD: "vitregram_ci_password"
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --no-parallel --stacktrace
 
       - name: Locate & Organize Generated APKs
         run: |
