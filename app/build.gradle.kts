@@ -91,7 +91,6 @@ chaquopy {
         pip {
             install("requests==2.34.2")
             install("urllib3==2.8.0")
-            install("pydantic==2.12.5")
             install("pycryptodomex==3.24.1")
             install("PySocks==1.7.1")
         }
