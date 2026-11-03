@@ -49,15 +49,21 @@ VitreGram isolates integration strategies behind a unified domain repository int
 
 ---
 
-## 4. Security & Credential Protection
+## 4. Security & TV Authentication UX
 
-1. **Zero Plaintext Passwords**:
-   - VitreGram never solicits, collects, or logs Instagram passwords.
-   - Users authenticate using session tokens or QR companion pairing.
-2. **Hardware-Backed Encryption**:
+1. **TV-Optimized WebView Cookie Extractor**:
+   - Manually entering 50+ character session cookies on a television remote control is error-prone and impractical for typical users.
+   - VitreGram implements `InstagramTvWebViewLogin`: an embedded, remote-navigable Android TV WebView that loads the official Instagram login interface with D-pad navigation highlights (`#E1306C` glow).
+   - Once the user logs in (supporting username/password, Facebook login, 2FA, and checkpoint challenges), Android's `CookieManager` detects the issuance of `sessionid` and `ds_user_id`.
+   - The cookies are automatically extracted, flushed, and routed directly into the encrypted Keystore session manager without requiring any manual cookie copy-pasting.
+
+2. **Zero Plaintext Passwords**:
+   - VitreGram never solicits, collects, or logs Instagram passwords directly in native code.
+   - Authentication happens exclusively through Instagram's own web layer.
+3. **Hardware-Backed Encryption**:
    - All session credentials, cookies, and tokens are stored using `androidx.security.crypto.EncryptedSharedPreferences` backed by the **Android Keystore (AES-256 SIV + AES-256 GCM)**.
-3. **Logout & Remote Clearing**:
-   - Triggering "Log Out" purges all Keystore secrets and Room database caches immediately.
+4. **Logout & Remote Clearing**:
+   - Triggering "Log Out" purges all Keystore secrets, clears WebView cookies via `CookieManager.removeAllCookies()`, and wipes Room database caches immediately.
 
 ---
 

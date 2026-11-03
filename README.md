@@ -13,6 +13,7 @@
 ## 📺 Key Highlights
 
 - **Leanback Remote Navigation**: 100% operable with standard D-pad TV remotes (Up, Down, Left, Right, Select/OK, Play/Pause).
+- **TV Browser Auto-Cookie Extractor**: No tedious remote-typing of long cookies! An embedded TV WebView loads Instagram Web; as soon as the user logs in with their credentials or Facebook, `sessionid` and `ds_user_id` are automatically captured, encrypted into Keystore, and seamlessly transitioned into TV mode.
 - **Dark Obsidian Liquid Glass UI**: Near-black (`#08090D`) backdrop, translucent frosted cards, illuminated glass borders, and smooth focus scale animations.
 - **Home Feed**: Real posts from followed accounts organized in horizontal TV shelves ("For You", "Popular with Friends").
 - **Vertical Reels Player**: Centered 9:16 video player with blurred video backdrop glow, creator audio tags, like/comment counts, and seamless Up/Down transitions.
