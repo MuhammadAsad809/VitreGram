@@ -1,12 +1,14 @@
 package com.vitregram.tv
 
 import android.app.Application
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
+import com.vitregram.tv.core.python.PythonInstagramBridge
+import com.vitregram.tv.core.python.PythonRuntimeManager
+import com.vitregram.tv.data.instagram.ChaquopyInstagramRepository
+import com.vitregram.tv.data.instagram.PythonInstagramDataSource
 import com.vitregram.tv.data.local.db.VitreGramDatabase
 import com.vitregram.tv.data.local.security.KeystoreManager
-import com.vitregram.tv.data.remote.adapter.OfficialApiAdapter
-import com.vitregram.tv.data.remote.adapter.UnsupportedFeatureHandler
-import com.vitregram.tv.data.remote.adapter.WebSessionAdapter
-import com.vitregram.tv.data.repository.InstagramRepositoryImpl
 import com.vitregram.tv.domain.repository.InstagramRepository
 
 /**
@@ -33,15 +35,16 @@ class TvApplication : Application() {
         // Initialize Android Keystore-backed secure token storage
         keystoreManager = KeystoreManager(this)
 
-        // Initialize integration adapters
-        val officialAdapter = OfficialApiAdapter()
-        val webSessionAdapter = WebSessionAdapter(keystoreManager)
-        val unsupportedHandler = UnsupportedFeatureHandler()
+        // Initialize Chaquopy Python runtime on Android
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
+        val pythonManager = PythonRuntimeManager.getInstance()
+        val pythonBridge = PythonInstagramBridge(pythonManager)
+        val pythonDataSource = PythonInstagramDataSource(pythonBridge)
 
-        instagramRepository = InstagramRepositoryImpl(
-            officialAdapter = officialAdapter,
-            webSessionAdapter = webSessionAdapter,
-            unsupportedHandler = unsupportedHandler,
+        instagramRepository = ChaquopyInstagramRepository(
+            dataSource = pythonDataSource,
             database = database,
             keystoreManager = keystoreManager
         )

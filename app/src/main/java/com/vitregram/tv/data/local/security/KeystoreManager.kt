@@ -68,6 +68,16 @@ class KeystoreManager(context: Context) {
         return session.sessionToken.isNotEmpty() && System.currentTimeMillis() < session.expirationTimestamp
     }
 
+    fun savePythonSettings(settingsJson: String) {
+        sharedPreferences.edit()
+            .putString(KEY_PYTHON_SETTINGS, settingsJson)
+            .apply()
+    }
+
+    fun getPythonSettings(): String? {
+        return sharedPreferences.getString(KEY_PYTHON_SETTINGS, null)
+    }
+
     fun clearSession() {
         sharedPreferences.edit().clear().apply()
     }
@@ -78,5 +88,6 @@ class KeystoreManager(context: Context) {
         private const val KEY_SESSION_TOKEN = "auth_session_token"
         private const val KEY_CSRF_TOKEN = "auth_csrf_token"
         private const val KEY_EXPIRATION = "auth_expiration_timestamp"
+        private const val KEY_PYTHON_SETTINGS = "auth_python_settings"
     }
 }
