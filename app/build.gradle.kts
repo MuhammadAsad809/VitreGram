@@ -125,9 +125,6 @@ dependencies {
     // Image loading (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    // QR Code Generation for TV Phone Pairing
-    implementation("com.google.zxing:core:3.5.3")
-
     // Network: Retrofit + OkHttp + Gson
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")

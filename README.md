@@ -13,9 +13,9 @@
 ## 📺 Key Highlights
 
 - **Leanback Remote Navigation**: 100% operable with standard D-pad TV remotes (Up, Down, Left, Right, Select/OK, Play/Pause).
-- **📱 Instant Phone QR Code Pairing (100% Reliable)**: Scan the on-screen TV QR code with your mobile phone camera (iPhone or Android). An embedded local pairing server serves a mobile companion app over Wi-Fi, allowing you to log in with your phone's touch keyboard or biometrics. Completely avoids remote typing, broken OAuth endpoints, and captcha loops!
-- **Instagram OAuth 2.0 Integration (xiandanin/instagram-login-android architecture)**: Supports official OAuth authorization code flow (`https://api.instagram.com/oauth/authorize`). Features automatic authorization code interception upon redirect, instant token exchange (`/oauth/access_token`) via OkHttp, custom TV toolbar with remote actions, and support for custom Meta Developer App credentials.
-- **TV Browser Auto-Cookie Extractor**: No tedious remote-typing of long cookies! An embedded TV WebView loads Instagram Web; as soon as the user logs in with their credentials or Facebook, `sessionid` and `ds_user_id` are automatically captured, encrypted into Keystore, and seamlessly transitioned into TV mode.
+- **🍪 Instagram In-App Cookie Extractor (DOWNLODER-FOR-CLIPPER Architecture)**: Streamlined, zero-hassle authentication. An embedded TV WebView loads Instagram Web and automatically captures `sessionid`, `ds_user_id`, and `csrftoken` the instant you sign in. No external servers or manual cookie typing required.
+- **🖥️ Desktop & 📱 Mobile View Toggle**: One-click remote toggle between Desktop and Mobile user-agents with live viewport adjustment and reload, ensuring smooth login across all layout formats and preventing mobile app redirection traps.
+- **🛡️ Intent Hijack Protection**: Blocks `intent://`, `instagram://`, and `market://` redirects, guaranteeing that authentication completes safely inside the TV app.
 - **Dark Obsidian Liquid Glass UI**: Near-black (`#08090D`) backdrop, translucent frosted cards, illuminated glass borders, and smooth focus scale animations.
 - **Home Feed**: Real posts from followed accounts organized in horizontal TV shelves ("For You", "Popular with Friends").
 - **Vertical Reels Player**: Centered 9:16 video player with blurred video backdrop glow, creator audio tags, like/comment counts, and seamless Up/Down transitions.
