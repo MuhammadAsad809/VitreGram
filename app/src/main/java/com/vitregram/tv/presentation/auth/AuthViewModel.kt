@@ -2,7 +2,7 @@ package com.vitregram.tv.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vitregram.tv.domain.model.AuthResult
+import com.vitregram.tv.domain.model.*
 import com.vitregram.tv.domain.repository.InstagramRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
