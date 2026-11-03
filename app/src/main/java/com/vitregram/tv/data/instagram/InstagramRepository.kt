@@ -2,9 +2,7 @@ package com.vitregram.tv.data.instagram
 
 import com.google.gson.Gson
 import com.vitregram.tv.data.local.db.VitreGramDatabase
-import com.vitregram.tv.data.local.db.entity.PostEntity
-import com.vitregram.tv.data.local.db.entity.ReelEntity
-import com.vitregram.tv.data.local.db.entity.StoryEntity
+import com.vitregram.tv.data.local.db.entity.*
 import com.vitregram.tv.data.local.security.KeystoreManager
 import com.vitregram.tv.domain.model.*
 import com.vitregram.tv.domain.repository.InstagramRepository
@@ -114,7 +112,7 @@ class ChaquopyInstagramRepository(
             }
             is NetworkResult.Error -> {
                 // Fallback to Room DB cache
-                val cached = withContext(Dispatchers.IO) { database.postDao().getFeedPosts() }
+                val cached = withContext(Dispatchers.IO) { database.postDao().getCachedPosts() }
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {
@@ -140,7 +138,6 @@ class ChaquopyInstagramRepository(
                                 authorAvatarUrl = s.author.profilePictureUrl,
                                 mediaUrl = s.mediaUrl,
                                 isVideo = s.isVideo,
-                                durationSeconds = s.durationSeconds,
                                 createdAt = s.createdAt,
                                 isSeen = s.isSeen
                             )
@@ -151,7 +148,7 @@ class ChaquopyInstagramRepository(
                 NetworkResult.Success(stories)
             }
             is NetworkResult.Error -> {
-                val cached = withContext(Dispatchers.IO) { database.storyDao().getStories() }
+                val cached = withContext(Dispatchers.IO) { database.storyDao().getCachedStories() }
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {
@@ -182,8 +179,6 @@ class ChaquopyInstagramRepository(
                                 audioArtist = r.audioArtist,
                                 likeCount = r.likeCount,
                                 commentCount = r.commentCount,
-                                shareCount = r.shareCount,
-                                viewCount = r.viewCount,
                                 isLiked = r.isLiked,
                                 isSaved = r.isSaved
                             )
@@ -194,7 +189,7 @@ class ChaquopyInstagramRepository(
                 NetworkResult.Success(reels)
             }
             is NetworkResult.Error -> {
-                val cached = withContext(Dispatchers.IO) { database.reelDao().getReels() }
+                val cached = withContext(Dispatchers.IO) { database.reelDao().getCachedReels() }
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {

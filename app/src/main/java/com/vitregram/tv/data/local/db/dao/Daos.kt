@@ -42,8 +42,14 @@ interface StoryDao {
     @Query("SELECT * FROM stories ORDER BY createdAt DESC")
     fun getAllStories(): Flow<List<StoryEntity>>
 
+    @Query("SELECT * FROM stories ORDER BY createdAt DESC")
+    suspend fun getCachedStories(): List<StoryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStories(stories: List<StoryEntity>)
+
+    @Query("DELETE FROM stories")
+    suspend fun clearAll()
 
     @Query("UPDATE stories SET isSeen = 1 WHERE id = :storyId")
     suspend fun markSeen(storyId: String)
