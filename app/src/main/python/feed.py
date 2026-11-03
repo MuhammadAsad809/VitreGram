@@ -14,23 +14,38 @@ logger = logging.getLogger("vitregram.feed")
 
 @safe_execute
 def get_timeline(max_id: Optional[str] = None) -> Dict[str, Any]:
-    """Retrieves timeline feed with pagination cursor."""
+    """Retrieves timeline feed with pagination cursor, falling back to explore if empty."""
     cl = get_client()
-    feed_response = cl.get_timeline_feed(max_id=max_id)
-    
+    feed_response = {}
+    try:
+        feed_response = cl.get_timeline_feed(max_id=max_id, reason="cold_start_fetch" if not max_id else "paginating")
+    except Exception as e:
+        logger.warning(f"get_timeline_feed failed: {e}. Trying explore fallback.")
+
     posts = []
-    feed_items = feed_response.get("feed_items", [])
+    feed_items = feed_response.get("feed_items", []) if isinstance(feed_response, dict) else []
     for item in feed_items:
         media_dict = item.get("media_or_ad") or item.get("media")
         if media_dict and "pk" in media_dict:
             try:
                 media_obj = extract_media_v1(media_dict)
                 posts.append(serialize_post(media_obj))
-            except Exception as e:
-                # Fallback to direct dict serialization if Pydantic validation encounters unusual tags
+            except Exception:
                 posts.append(serialize_post(media_dict))
 
-    next_cursor = feed_response.get("next_max_id")
+    # If timeline returned no posts, fallback to explore posts so home screen has content
+    if not posts and not max_id:
+        try:
+            explore_posts = get_explore()
+            if explore_posts:
+                return {
+                    "posts": explore_posts,
+                    "nextCursor": None,
+                }
+        except Exception as e:
+            logger.warning(f"Explore fallback also failed: {e}")
+
+    next_cursor = feed_response.get("next_max_id") if isinstance(feed_response, dict) else None
     return {
         "posts": posts,
         "nextCursor": next_cursor,

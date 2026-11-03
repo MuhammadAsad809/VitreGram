@@ -34,8 +34,10 @@ class InstagramClientManager:
         self._client = Client(
             settings=settings,
             private_transport="requests",
-            request_timeout=15,
+            request_timeout=8,
         )
+        self._client.public_request_retries_count = 1
+        self._client.session_retry_total = 1
         # Avoid unexpected file system prompts
         self._client.with_challenge_flow = False
 

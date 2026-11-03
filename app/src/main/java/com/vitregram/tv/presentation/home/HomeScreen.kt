@@ -23,11 +23,16 @@ import com.vitregram.tv.ui.theme.ObsidianBackground
 import com.vitregram.tv.ui.theme.TextPrimary
 import com.vitregram.tv.ui.theme.TextSecondary
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     onOpenPost: (Post) -> Unit,
     onOpenStory: (Story) -> Unit,
+    onRelogin: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -37,9 +42,19 @@ fun HomeScreen(
             LoadingView(message = "Loading Instagram Home Feed...")
         }
         is HomeUiState.Error -> {
+            val isAuthError = state.message.contains("login", ignoreCase = true) ||
+                    state.message.contains("auth", ignoreCase = true) ||
+                    state.message.contains("session", ignoreCase = true)
+
             ErrorView(
-                message = state.message,
-                onRetry = { viewModel.loadFeed() }
+                message = if (isAuthError) "Session expired or authentication required. Please sign in again." else state.message,
+                onRetry = {
+                    if (isAuthError && onRelogin != null) {
+                        onRelogin()
+                    } else {
+                        viewModel.loadFeed()
+                    }
+                }
             )
         }
         is HomeUiState.Success -> {
@@ -136,6 +151,54 @@ fun HomeScreen(
                                     MediaCard(
                                         post = post,
                                         onClick = { onOpenPost(post) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Empty State UI if no posts are returned
+                if (state.forYouPosts.isEmpty() && state.popularPosts.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Your feed is currently empty or loading new content.",
+                                color = TextSecondary,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                            GlassCard(
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                backgroundColor = Color.White.copy(alpha = 0.12f),
+                                focusedBorderColor = Color.White,
+                                onClick = { viewModel.loadFeed() }
+                            ) { isFocused ->
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh",
+                                        tint = if (isFocused) Color.White else TextPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Refresh Feed",
+                                        color = if (isFocused) Color.White else TextPrimary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
                                     )
                                 }
                             }

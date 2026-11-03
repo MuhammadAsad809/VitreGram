@@ -54,25 +54,43 @@ class ChaquopyInstagramRepository(
         return result
     }
 
+    @Volatile
+    private var isSessionInitialized = false
+
+    private suspend fun ensureSessionRestored() {
+        if (isSessionInitialized) return
+        withContext(Dispatchers.IO) {
+            val savedSettings = keystoreManager.getPythonSettings()
+            if (!savedSettings.isNullOrEmpty() && savedSettings != "{}") {
+                val ok = dataSource.restoreSession(savedSettings)
+                if (ok) isSessionInitialized = true
+            }
+            if (!isSessionInitialized) {
+                val session = keystoreManager.getSession()
+                if (session != null && session.cookies.isNotEmpty()) {
+                    val res = dataSource.loginWithCookies(gson.toJson(session.cookies))
+                    if (res is AuthResult.Success) {
+                        isSessionInitialized = true
+                        val dump = dataSource.dumpSession()
+                        if (dump.isNotEmpty() && dump != "{}") {
+                            keystoreManager.savePythonSettings(dump)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun checkActiveSession(): Boolean {
         // First check Keystore
         if (!keystoreManager.hasValidSession()) return false
         
-        // Restore session into Python runtime if not already active
-        val savedSettings = keystoreManager.getPythonSettings()
-        if (!savedSettings.isNullOrEmpty()) {
-            dataSource.restoreSession(savedSettings)
-        } else {
-            // Restore from cookies
-            val session = keystoreManager.getSession()
-            if (session != null && session.cookies.isNotEmpty()) {
-                dataSource.loginWithCookies(gson.toJson(session.cookies))
-            }
-        }
+        ensureSessionRestored()
         return dataSource.checkSession()
     }
 
     override suspend fun logout() {
+        isSessionInitialized = false
         keystoreManager.clearSession()
         dataSource.logout()
         withContext(Dispatchers.IO) {
@@ -83,6 +101,7 @@ class ChaquopyInstagramRepository(
     }
 
     override suspend fun getFeed(cursor: String?): NetworkResult<List<Post>> {
+        ensureSessionRestored()
         val result = dataSource.getTimeline(cursor)
         return when (result) {
             is NetworkResult.Success -> {
@@ -125,6 +144,7 @@ class ChaquopyInstagramRepository(
     }
 
     override suspend fun getStories(): NetworkResult<List<Story>> {
+        ensureSessionRestored()
         val result = dataSource.getStoriesTray()
         return when (result) {
             is NetworkResult.Success -> {
@@ -162,6 +182,7 @@ class ChaquopyInstagramRepository(
     }
 
     override suspend fun getReels(cursor: String?): NetworkResult<List<Reel>> {
+        ensureSessionRestored()
         val result = dataSource.getReels(amount = 15, lastMediaPk = cursor)
         return when (result) {
             is NetworkResult.Success -> {
@@ -204,34 +225,42 @@ class ChaquopyInstagramRepository(
     }
 
     override suspend fun getExplore(cursor: String?): NetworkResult<List<Post>> {
+        ensureSessionRestored()
         return dataSource.getExplore(cursor)
     }
 
     override suspend fun search(query: String): NetworkResult<Pair<List<User>, List<Reel>>> {
+        ensureSessionRestored()
         return dataSource.searchAll(query)
     }
 
     override suspend fun getProfile(username: String): NetworkResult<User> {
+        ensureSessionRestored()
         return dataSource.getUserInfo(username)
     }
 
     override suspend fun getUserPosts(userId: String): NetworkResult<List<Post>> {
+        ensureSessionRestored()
         return dataSource.getUserPosts(userId)
     }
 
     override suspend fun likePost(postId: String): ActionResult {
+        ensureSessionRestored()
         return dataSource.likeMedia(postId)
     }
 
     override suspend fun savePost(postId: String): ActionResult {
+        ensureSessionRestored()
         return dataSource.saveMedia(postId)
     }
 
     override suspend fun getComments(postId: String): NetworkResult<List<Comment>> {
+        ensureSessionRestored()
         return dataSource.getComments(postId)
     }
 
     override suspend fun getMessages(): NetworkResult<List<Message>> {
+        ensureSessionRestored()
         return dataSource.getThreads()
     }
 

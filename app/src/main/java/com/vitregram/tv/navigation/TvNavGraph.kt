@@ -94,6 +94,12 @@ fun TvNavGraph(
                         },
                         onOpenStory = { story ->
                             navController.navigate(Screen.Stories.route)
+                        },
+                        onRelogin = {
+                            TvApplication.instance.keystoreManager.clearSession()
+                            navController.navigate(Screen.Auth.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
                         }
                     )
                 }

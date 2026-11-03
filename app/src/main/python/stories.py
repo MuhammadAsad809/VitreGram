@@ -16,10 +16,14 @@ logger = logging.getLogger("vitregram.stories")
 def get_stories_tray() -> List[Dict[str, Any]]:
     """Retrieves active stories tray from followed users on the home feed."""
     cl = get_client()
-    tray_response = cl.get_reels_tray_feed()
+    try:
+        tray_response = cl.get_reels_tray_feed()
+    except Exception as e:
+        logger.warning(f"get_reels_tray_feed failed: {e}")
+        return []
     
     stories = []
-    tray_items = tray_response.get("tray", [])
+    tray_items = tray_response.get("tray", []) if isinstance(tray_response, dict) else []
     for user_tray in tray_items:
         items = user_tray.get("items", [])
         for item in items:
