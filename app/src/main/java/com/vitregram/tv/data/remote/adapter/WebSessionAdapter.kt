@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.vitregram.tv.data.local.security.KeystoreManager
 import com.vitregram.tv.domain.model.*
+import com.vitregram.tv.domain.model.MediaType as IgMediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -244,9 +245,9 @@ class WebSessionAdapter(
             val timelineResult = fetchTimelineFeed()
             if (timelineResult is NetworkResult.Success && timelineResult.data.isNotEmpty()) {
                 val videoPosts = timelineResult.data
-                    .filter { it.mediaItems.any { item -> item.type == MediaType.VIDEO } }
+                    .filter { it.mediaItems.any { item -> item.type == IgMediaType.VIDEO } }
                     .map { post ->
-                        val videoItem = post.mediaItems.first { it.type == MediaType.VIDEO }
+                        val videoItem = post.mediaItems.first { it.type == IgMediaType.VIDEO }
                         Reel(
                             id = post.id,
                             author = post.author,
@@ -428,9 +429,9 @@ class WebSessionAdapter(
 
         val mediaUrl = extractBestImageUrl(media)
         val mediaType = if (media.get("media_type")?.asInt == 2) {
-            MediaType.VIDEO
+            IgMediaType.VIDEO
         } else {
-            MediaType.IMAGE
+            IgMediaType.IMAGE
         }
 
         return Post(
