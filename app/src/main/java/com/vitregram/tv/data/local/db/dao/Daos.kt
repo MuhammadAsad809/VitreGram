@@ -9,6 +9,9 @@ interface PostDao {
     @Query("SELECT * FROM posts ORDER BY createdAt DESC")
     fun getAllPosts(): Flow<List<PostEntity>>
 
+    @Query("SELECT * FROM posts ORDER BY createdAt DESC")
+    suspend fun getCachedPosts(): List<PostEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPosts(posts: List<PostEntity>)
 
@@ -23,6 +26,9 @@ interface PostDao {
 interface ReelDao {
     @Query("SELECT * FROM reels")
     fun getAllReels(): Flow<List<ReelEntity>>
+
+    @Query("SELECT * FROM reels")
+    suspend fun getCachedReels(): List<ReelEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReels(reels: List<ReelEntity>)

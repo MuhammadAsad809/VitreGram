@@ -114,6 +114,34 @@ class InstagramRepositoryImpl(
                 }
                 database.reelDao().insertReels(entities)
             }
+            return remoteResult
+        } else {
+            // Fallback to locally cached reels in Room DB if remote fetch returned empty or transient error
+            val cachedEntities = withContext(Dispatchers.IO) { database.reelDao().getCachedReels() }
+            if (cachedEntities.isNotEmpty()) {
+                val cachedReels = cachedEntities.map { entity ->
+                    Reel(
+                        id = entity.id,
+                        author = User(
+                            id = entity.authorId,
+                            username = entity.authorUsername,
+                            fullName = entity.authorUsername,
+                            profilePictureUrl = entity.authorAvatarUrl,
+                            isVerified = false
+                        ),
+                        videoUrl = entity.videoUrl,
+                        thumbnailUrl = entity.thumbnailUrl,
+                        caption = entity.caption,
+                        audioTitle = entity.audioTitle,
+                        audioArtist = entity.audioArtist,
+                        likeCount = entity.likeCount,
+                        commentCount = entity.commentCount,
+                        isLiked = entity.isLiked,
+                        isSaved = entity.isSaved
+                    )
+                }
+                return NetworkResult.Success(cachedReels)
+            }
         }
         return remoteResult
     }
