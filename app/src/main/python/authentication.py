@@ -65,6 +65,11 @@ def login_with_cookies(cookies_json: str) -> Dict[str, Any]:
             user_id = match.group()
             
     if user_id:
+        cl.authorization_data = {
+            "ds_user_id": str(user_id),
+            "sessionid": cookies.get("sessionid", ""),
+            "should_use_header_over_cookies": True,
+        }
         cl.user_id = str(user_id)
         
     return {

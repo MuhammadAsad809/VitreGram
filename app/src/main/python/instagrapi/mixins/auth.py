@@ -1064,6 +1064,13 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
             return int(user_id)
         return None
 
+    @user_id.setter
+    def user_id(self, val):
+        if not hasattr(self, "authorization_data") or not isinstance(self.authorization_data, dict):
+            self.authorization_data = {}
+        if val:
+            self.authorization_data["ds_user_id"] = str(val)
+
     @property
     def device(self) -> dict:
         return {
@@ -1145,43 +1152,30 @@ class LoginMixin(PreLoginFlowMixin, PostLoginFlowMixin):
         self.init()
         return True
 
-    def load_settings(self, path: Union[str, Path], override_app_version: bool = False) -> Dict:
+    def load_settings(self, path: Union[str, Path, Dict], override_app_version: bool = False) -> Dict:
         """
         Load session settings
-
-        Parameters
-        ----------
-        path: Path
-            Path to storage file
-        override_app_version: bool, optional
-            Mismatched app_version/version_code/bloks_versioning_id may
-            increase risk. If True, override with a known version from
-            APP_SETTINGS (in memory). Call dump_settings() to persist.
-
-
-        Returns
-        -------
-        Dict
-            Current session settings as a Dict
         """
         self.override_app_version = override_app_version
+        if isinstance(path, dict):
+            self.set_settings(path)
+            return self.settings
+        if isinstance(path, str) and (path.startswith("{") or not os.path.exists(path)):
+            try:
+                self.set_settings(json.loads(path))
+                return self.settings
+            except Exception:
+                pass
         with open(path, "r") as fp:
             self.set_settings(json.load(fp))
             return self.settings
 
-    def dump_settings(self, path: Union[str, Path]) -> bool:
+    def dump_settings(self, path: Optional[Union[str, Path]] = None) -> Union[Dict, bool]:
         """
         Serialize and save session settings
-
-        Parameters
-        ----------
-        path: Path
-            Path to storage file
-
-        Returns
-        -------
-        Bool
         """
+        if path is None:
+            return self.get_settings()
         with open(path, "w") as fp:
             json.dump(self.get_settings(), fp, indent=4)
         return True
