@@ -4,14 +4,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vitregram.tv.data.remote.oauth.InstagramOAuthHelper
 import com.vitregram.tv.ui.components.GlassCard
 import com.vitregram.tv.ui.components.LoadingView
 import com.vitregram.tv.ui.theme.*
@@ -34,8 +39,15 @@ fun AuthScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showOAuthLogin by remember { mutableStateOf(false) }
     var showWebViewLogin by remember { mutableStateOf(false) }
+    var showOAuthSettings by remember { mutableStateOf(false) }
     var showManualCookieInput by remember { mutableStateOf(false) }
+
+    // OAuth Credentials (defaults from xiandanin/instagram-login-android SDK)
+    var clientIdInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_CLIENT_ID) }
+    var clientSecretInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_CLIENT_SECRET) }
+    var redirectUriInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_REDIRECT_URI) }
     var cookieInput by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState) {
@@ -44,7 +56,24 @@ fun AuthScreen(
         }
     }
 
-    // Full-Screen TV-Optimized WebView Auto-Cookie Extractor
+    // 1. Full-Screen TV OAuth 2.0 Screen (xiandanin/instagram-login-android architecture)
+    if (showOAuthLogin) {
+        InstagramTvOAuthLogin(
+            clientId = clientIdInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_ID },
+            clientSecret = clientSecretInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_SECRET },
+            redirectUri = redirectUriInput.ifBlank { InstagramOAuthHelper.DEFAULT_REDIRECT_URI },
+            onOAuthSuccess = { tokenResponse, cookies ->
+                showOAuthLogin = false
+                viewModel.loginWithOAuth(tokenResponse.accessToken, tokenResponse.userId, cookies)
+            },
+            onCancel = {
+                showOAuthLogin = false
+            }
+        )
+        return
+    }
+
+    // 2. Full-Screen TV-Optimized WebView Auto-Cookie Extractor
     if (showWebViewLogin) {
         InstagramTvWebViewLogin(
             onCookiesExtracted = { cookies ->
@@ -67,20 +96,20 @@ fun AuthScreen(
         modifier = modifier
             .fillMaxSize()
             .background(ObsidianBackground)
-            .padding(48.dp),
-        horizontalArrangement = Arrangement.spacedBy(40.dp),
+            .padding(horizontal = 40.dp, vertical = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(32.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left Column: TV Experience Showcase & Architecture
         Column(
             modifier = Modifier
-                .weight(1f)
+                .weight(0.9f)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(68.dp)
                     .clip(CircleShape)
                     .background(InstagramGradient)
                     .padding(3.dp)
@@ -92,32 +121,37 @@ fun AuthScreen(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = "VitreGram Logo",
                     tint = Color.White,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(36.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
                 text = "VitreGram for TV",
                 color = Color.White,
-                fontSize = 34.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Experience your real Instagram feed, vertical reels, and stories natively formatted for your television screen.",
                 color = TextSecondary,
-                fontSize = 15.sp,
-                lineHeight = 22.sp
+                fontSize = 14.sp,
+                lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // TV Feature Highlights
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                FeatureBullet(
+                    icon = Icons.Default.Lock,
+                    title = "OAuth 2.0 & Token Exchange",
+                    description = "Integrated with xiandanin/instagram-login-android SDK."
+                )
                 FeatureBullet(
                     icon = Icons.Default.Tv,
                     title = "Remote-First Navigation",
@@ -134,51 +168,52 @@ fun AuthScreen(
         // Right Column: TV Authentication Options Hub
         GlassCard(
             modifier = Modifier
-                .weight(1.2f)
-                .fillMaxHeight(0.95f),
+                .weight(1.3f)
+                .fillMaxHeight(0.96f),
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp),
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Sign In to Instagram",
                     color = TextPrimary,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Choose your preferred TV sign-in method below.",
+                    text = "Select your preferred authentication method for TV.",
                     color = TextSecondary,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                // PRIMARY RECOMMENDED OPTION: TV Browser Auto-Cookie Extractor
+                // METHOD 1: INSTAGRAM OAUTH 2.0 (from xiandanin/instagram-login-android)
                 GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(115.dp),
+                        .height(105.dp),
                     shape = RoundedCornerShape(16.dp),
-                    backgroundColor = InstagramPink.copy(alpha = 0.2f),
+                    backgroundColor = InstagramPurple.copy(alpha = 0.22f),
                     focusedBorderColor = InstagramPink,
                     onClick = {
-                        showWebViewLogin = true
+                        showOAuthLogin = true
                     }
                 ) { isFocused ->
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -188,45 +223,45 @@ fun AuthScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(48.dp)
+                                    .size(46.dp)
                                     .clip(CircleShape)
                                     .background(InstagramGradient),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Language,
+                                    imageVector = Icons.Default.Lock,
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "TV Browser Sign In",
+                                        text = "Instagram OAuth 2.0",
                                         color = Color.White,
-                                        fontSize = 17.sp,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "RECOMMENDED",
                                         color = InstagramYellow,
-                                        fontSize = 10.sp,
+                                        fontSize = 9.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(4.dp))
                                             .background(InstagramYellow.copy(alpha = 0.15f))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            .padding(horizontal = 5.dp, vertical = 2.dp)
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(3.dp))
                                 Text(
-                                    text = "Log in via Instagram Web with remote. Cookies are extracted automatically without manual typing.",
+                                    text = "OAuth dialog with automatic authorization code interception & access token exchange.",
                                     color = TextSecondary,
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp
                                 )
                             }
                         }
@@ -234,28 +269,159 @@ fun AuthScreen(
                             imageVector = Icons.Default.ArrowForward,
                             contentDescription = "Start",
                             tint = if (isFocused) Color.White else TextSecondary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                // Optional Meta App Credentials Config Toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 10.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { showOAuthSettings = !showOAuthSettings }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = TextMuted,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (showOAuthSettings) "Hide OAuth Config" else "Custom Meta App Config",
+                            color = TextMuted,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
 
-                // SECONDARY OPTION: Manual Session Cookie Input
+                AnimatedVisibility(visible = showOAuthSettings) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
+                            .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = "Meta / Instagram Developer App Settings",
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = clientIdInput,
+                            onValueChange = { clientIdInput = it },
+                            label = { Text("Client ID", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = clientSecretInput,
+                            onValueChange = { clientSecretInput = it },
+                            label = { Text("Client Secret", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = redirectUriInput,
+                            onValueChange = { redirectUriInput = it },
+                            label = { Text("Redirect URI", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // METHOD 2: TV BROWSER AUTO-COOKIE EXTRACTOR
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(86.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    backgroundColor = Color.White.copy(alpha = 0.05f),
+                    focusedBorderColor = Color.White,
+                    onClick = {
+                        showWebViewLogin = true
+                    }
+                ) { isFocused ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Language,
+                                    contentDescription = null,
+                                    tint = InstagramOrange,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "TV Web Browser Auto-Connect",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Web login with remote. Automatically intercepts sessionid cookies.",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Start",
+                            tint = if (isFocused) Color.White else TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // METHOD 3: MANUAL COOKIE ENTRY
                 GlassCard(
                     modifier = Modifier
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    backgroundColor = Color.White.copy(alpha = 0.04f),
+                    backgroundColor = Color.White.copy(alpha = 0.03f),
                     focusedBorderColor = Color.White,
                     onClick = {
                         showManualCookieInput = !showManualCookieInput
                     }
-                ) { isFocused ->
+                ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(14.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -266,21 +432,21 @@ fun AuthScreen(
                                 Icon(
                                     imageVector = Icons.Default.Key,
                                     contentDescription = null,
-                                    tint = InstagramOrange,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = "Manual Cookie / Advanced",
-                                    color = TextPrimary,
-                                    fontSize = 14.sp,
+                                    color = TextSecondary,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
                             Text(
                                 text = if (showManualCookieInput) "Hide ▲" else "Show ▼",
                                 color = TextMuted,
-                                fontSize = 12.sp
+                                fontSize = 11.sp
                             )
                         }
 
@@ -288,7 +454,7 @@ fun AuthScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 14.dp)
+                                    .padding(top = 10.dp)
                             ) {
                                 TextField(
                                     value = cookieInput,
@@ -297,12 +463,12 @@ fun AuthScreen(
                                         Text(
                                             text = "sessionid=...; ds_user_id=...",
                                             color = TextMuted,
-                                            fontSize = 12.sp
+                                            fontSize = 11.sp
                                         )
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(60.dp)
+                                        .height(56.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .border(1.dp, GlassBorder, RoundedCornerShape(10.dp)),
                                     colors = TextFieldDefaults.colors(
@@ -313,7 +479,7 @@ fun AuthScreen(
                                     )
                                 )
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
                                 Button(
                                     onClick = { viewModel.loginWithCookies(cookieInput) },
@@ -326,7 +492,7 @@ fun AuthScreen(
                                     Text(
                                         text = "Authenticate with Cookie",
                                         color = Color.White,
-                                        fontSize = 13.sp,
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -336,11 +502,11 @@ fun AuthScreen(
                 }
 
                 if (uiState is AuthUiState.Error) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = (uiState as AuthUiState.Error).message,
                         color = ErrorColor,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -360,26 +526,26 @@ private fun FeatureBullet(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.04f))
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = InstagramYellow,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(18.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(10.dp))
         Column {
             Text(
                 text = title,
                 color = TextPrimary,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = description,
                 color = TextSecondary,
-                fontSize = 11.sp
+                fontSize = 10.sp
             )
         }
     }

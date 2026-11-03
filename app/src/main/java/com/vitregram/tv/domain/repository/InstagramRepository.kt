@@ -10,6 +10,8 @@ interface InstagramRepository {
 
     suspend fun loginWithSession(cookieString: String): AuthResult
 
+    suspend fun loginWithOAuthToken(accessToken: String, userId: String, cookies: Map<String, String> = emptyMap()): AuthResult
+
     suspend fun checkActiveSession(): Boolean
 
     suspend fun logout()

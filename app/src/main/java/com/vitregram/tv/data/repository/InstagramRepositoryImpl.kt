@@ -29,6 +29,29 @@ class InstagramRepositoryImpl(
         return result
     }
 
+    override suspend fun loginWithOAuthToken(
+        accessToken: String,
+        userId: String,
+        cookies: Map<String, String>
+    ): AuthResult {
+        if (accessToken.isBlank()) {
+            return AuthResult.Error("Access token cannot be empty")
+        }
+        val session = AuthSession(
+            userId = userId,
+            username = "User_$userId",
+            sessionToken = accessToken,
+            csrfToken = cookies["csrftoken"],
+            cookies = cookies.toMutableMap().apply {
+                put("access_token", accessToken)
+                put("ds_user_id", userId)
+            },
+            expirationTimestamp = System.currentTimeMillis() + (60L * 24 * 3600 * 1000)
+        )
+        keystoreManager.saveSession(session)
+        return AuthResult.Success(session)
+    }
+
     override suspend fun checkActiveSession(): Boolean {
         return keystoreManager.hasValidSession()
     }

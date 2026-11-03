@@ -62,4 +62,26 @@ class AuthViewModel(
             }
         }
     }
+
+    fun loginWithOAuth(accessToken: String, userId: String, cookies: Map<String, String> = emptyMap()) {
+        if (accessToken.isBlank()) {
+            _uiState.value = AuthUiState.Error("Access token cannot be empty")
+            return
+        }
+
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            when (val result = repository.loginWithOAuthToken(accessToken, userId, cookies)) {
+                is AuthResult.Success -> {
+                    _uiState.value = AuthUiState.Authenticated
+                }
+                is AuthResult.Error -> {
+                    _uiState.value = AuthUiState.Error(result.message)
+                }
+                else -> {
+                    _uiState.value = AuthUiState.Error("OAuth authorization failed")
+                }
+            }
+        }
+    }
 }
