@@ -84,4 +84,12 @@ class AuthViewModel(
             }
         }
     }
+
+    fun loginWithDirectSession(session: AuthSession) {
+        _uiState.value = AuthUiState.Loading
+        viewModelScope.launch {
+            repository.loginWithOAuthToken(session.sessionToken, session.userId, session.cookies)
+            _uiState.value = AuthUiState.Authenticated
+        }
+    }
 }

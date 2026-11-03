@@ -57,8 +57,8 @@ fun InstagramTvWebViewLogin(
         }
     }
 
-    // Modern Chrome Desktop/Tablet User-Agent ensures full HTML login form without mobile redirect traps
-    val desktopUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    // Authentic Tablet User-Agent matching Android platform to avoid bot detection & captcha loops
+    val tabletUserAgent = "Mozilla/5.0 (Linux; Android 14; Pixel Tablet Build/UQ1A.240205.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.102 Safari/537.36"
 
     Box(
         modifier = modifier
@@ -168,7 +168,7 @@ fun InstagramTvWebViewLogin(
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
                                 textZoom = 110
-                                userAgentString = desktopUserAgent
+                                userAgentString = tabletUserAgent
                                 setSupportZoom(false)
                                 builtInZoomControls = false
                                 displayZoomControls = false

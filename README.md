@@ -13,6 +13,7 @@
 ## 📺 Key Highlights
 
 - **Leanback Remote Navigation**: 100% operable with standard D-pad TV remotes (Up, Down, Left, Right, Select/OK, Play/Pause).
+- **📱 Instant Phone QR Code Pairing (100% Reliable)**: Scan the on-screen TV QR code with your mobile phone camera (iPhone or Android). An embedded local pairing server serves a mobile companion app over Wi-Fi, allowing you to log in with your phone's touch keyboard or biometrics. Completely avoids remote typing, broken OAuth endpoints, and captcha loops!
 - **Instagram OAuth 2.0 Integration (xiandanin/instagram-login-android architecture)**: Supports official OAuth authorization code flow (`https://api.instagram.com/oauth/authorize`). Features automatic authorization code interception upon redirect, instant token exchange (`/oauth/access_token`) via OkHttp, custom TV toolbar with remote actions, and support for custom Meta Developer App credentials.
 - **TV Browser Auto-Cookie Extractor**: No tedious remote-typing of long cookies! An embedded TV WebView loads Instagram Web; as soon as the user logs in with their credentials or Facebook, `sessionid` and `ds_user_id` are automatically captured, encrypted into Keystore, and seamlessly transitioned into TV mode.
 - **Dark Obsidian Liquid Glass UI**: Near-black (`#08090D`) backdrop, translucent frosted cards, illuminated glass borders, and smooth focus scale animations.

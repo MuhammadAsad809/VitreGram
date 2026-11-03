@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
@@ -39,12 +40,13 @@ fun AuthScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showOAuthLogin by remember { mutableStateOf(false) }
+    var showQrPairing by remember { mutableStateOf(false) }
     var showWebViewLogin by remember { mutableStateOf(false) }
+    var showOAuthLogin by remember { mutableStateOf(false) }
     var showOAuthSettings by remember { mutableStateOf(false) }
     var showManualCookieInput by remember { mutableStateOf(false) }
 
-    // OAuth Credentials (defaults from xiandanin/instagram-login-android SDK)
+    // Custom OAuth Credentials (if user has their own Meta developer app)
     var clientIdInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_CLIENT_ID) }
     var clientSecretInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_CLIENT_SECRET) }
     var redirectUriInput by remember { mutableStateOf(InstagramOAuthHelper.DEFAULT_REDIRECT_URI) }
@@ -56,18 +58,15 @@ fun AuthScreen(
         }
     }
 
-    // 1. Full-Screen TV OAuth 2.0 Screen (xiandanin/instagram-login-android architecture)
-    if (showOAuthLogin) {
-        InstagramTvOAuthLogin(
-            clientId = clientIdInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_ID },
-            clientSecret = clientSecretInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_SECRET },
-            redirectUri = redirectUriInput.ifBlank { InstagramOAuthHelper.DEFAULT_REDIRECT_URI },
-            onOAuthSuccess = { tokenResponse, cookies ->
-                showOAuthLogin = false
-                viewModel.loginWithOAuth(tokenResponse.accessToken, tokenResponse.userId, cookies)
+    // 1. FULL-SCREEN QR CODE PHONE PAIRING (Instant & 100% Reliable)
+    if (showQrPairing) {
+        QrPairingScreen(
+            onSessionAuthenticated = { session ->
+                showQrPairing = false
+                viewModel.loginWithDirectSession(session)
             },
             onCancel = {
-                showOAuthLogin = false
+                showQrPairing = false
             }
         )
         return
@@ -82,6 +81,23 @@ fun AuthScreen(
             },
             onCancel = {
                 showWebViewLogin = false
+            }
+        )
+        return
+    }
+
+    // 3. Full-Screen TV OAuth 2.0 Screen (Custom Meta developer app)
+    if (showOAuthLogin) {
+        InstagramTvOAuthLogin(
+            clientId = clientIdInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_ID },
+            clientSecret = clientSecretInput.ifBlank { InstagramOAuthHelper.DEFAULT_CLIENT_SECRET },
+            redirectUri = redirectUriInput.ifBlank { InstagramOAuthHelper.DEFAULT_REDIRECT_URI },
+            onOAuthSuccess = { tokenResponse, cookies ->
+                showOAuthLogin = false
+                viewModel.loginWithOAuth(tokenResponse.accessToken, tokenResponse.userId, cookies)
+            },
+            onCancel = {
+                showOAuthLogin = false
             }
         )
         return
@@ -148,9 +164,9 @@ fun AuthScreen(
             // TV Feature Highlights
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 FeatureBullet(
-                    icon = Icons.Default.Lock,
-                    title = "OAuth 2.0 & Token Exchange",
-                    description = "Integrated with xiandanin/instagram-login-android SDK."
+                    icon = Icons.Default.QrCode2,
+                    title = "Instant Phone QR Pairing",
+                    description = "Scan with your phone camera. Zero remote typing."
                 )
                 FeatureBullet(
                     icon = Icons.Default.Tv,
@@ -198,16 +214,16 @@ fun AuthScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // METHOD 1: INSTAGRAM OAUTH 2.0 (from xiandanin/instagram-login-android)
+                // METHOD 1: SCAN QR CODE WITH PHONE (THE #1 RECOMMENDED METHOD)
                 GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(105.dp),
+                        .height(115.dp),
                     shape = RoundedCornerShape(16.dp),
-                    backgroundColor = InstagramPurple.copy(alpha = 0.22f),
+                    backgroundColor = InstagramPink.copy(alpha = 0.22f),
                     focusedBorderColor = InstagramPink,
                     onClick = {
-                        showOAuthLogin = true
+                        showQrPairing = true
                     }
                 ) { isFocused ->
                     Row(
@@ -223,23 +239,23 @@ fun AuthScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(46.dp)
+                                    .size(48.dp)
                                     .clip(CircleShape)
                                     .background(InstagramGradient),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Lock,
+                                    imageVector = Icons.Default.QrCode2,
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(26.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "Instagram OAuth 2.0",
+                                        text = "Scan QR Code with Phone",
                                         color = Color.White,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
@@ -258,7 +274,7 @@ fun AuthScreen(
                                 }
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
-                                    text = "OAuth dialog with automatic authorization code interception & access token exchange.",
+                                    text = "Scan with your phone camera. Enter credentials on your phone. No captcha errors, no remote typing!",
                                     color = TextSecondary,
                                     fontSize = 11.sp,
                                     lineHeight = 15.sp
@@ -274,76 +290,9 @@ fun AuthScreen(
                     }
                 }
 
-                // Optional Meta App Credentials Config Toggle
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 10.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { showOAuthSettings = !showOAuthSettings }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (showOAuthSettings) "Hide OAuth Config" else "Custom Meta App Config",
-                            color = TextMuted,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(12.dp))
 
-                AnimatedVisibility(visible = showOAuthSettings) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.Black.copy(alpha = 0.3f))
-                            .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
-                            .padding(14.dp)
-                    ) {
-                        Text(
-                            text = "Meta / Instagram Developer App Settings",
-                            color = TextPrimary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = clientIdInput,
-                            onValueChange = { clientIdInput = it },
-                            label = { Text("Client ID", fontSize = 11.sp) },
-                            modifier = Modifier.fillMaxWidth(),
-                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        OutlinedTextField(
-                            value = clientSecretInput,
-                            onValueChange = { clientSecretInput = it },
-                            label = { Text("Client Secret", fontSize = 11.sp) },
-                            modifier = Modifier.fillMaxWidth(),
-                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        OutlinedTextField(
-                            value = redirectUriInput,
-                            onValueChange = { redirectUriInput = it },
-                            label = { Text("Redirect URI", fontSize = 11.sp) },
-                            modifier = Modifier.fillMaxWidth(),
-                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // METHOD 2: TV BROWSER AUTO-COOKIE EXTRACTOR
+                // METHOD 2: TV BROWSER AUTO-CONNECT
                 GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -390,7 +339,7 @@ fun AuthScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Web login with remote. Automatically intercepts sessionid cookies.",
+                                    text = "Web login directly on TV with D-pad navigation.",
                                     color = TextSecondary,
                                     fontSize = 11.sp
                                 )
@@ -497,6 +446,82 @@ fun AuthScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+
+                // ADVANCED SETTINGS (Custom Meta Developer App OAuth)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { showOAuthSettings = !showOAuthSettings }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = TextMuted,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (showOAuthSettings) "Hide Developer Settings" else "Custom Meta Developer App",
+                            color = TextMuted,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = showOAuthSettings) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
+                            .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = "Meta / Instagram Developer App Settings",
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = clientIdInput,
+                            onValueChange = { clientIdInput = it },
+                            label = { Text("Client ID", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = clientSecretInput,
+                            onValueChange = { clientSecretInput = it },
+                            label = { Text("Client Secret", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = redirectUriInput,
+                            onValueChange = { redirectUriInput = it },
+                            label = { Text("Redirect URI", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = { showOAuthLogin = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = InstagramPurple),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("Launch Custom OAuth", fontSize = 12.sp)
                         }
                     }
                 }
