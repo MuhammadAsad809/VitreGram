@@ -116,10 +116,11 @@ class ChaquopyInstagramRepository(
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {
-                    result
+                    NetworkResult.Error(result.message, result.throwable, result.code)
                 }
             }
-            else -> result
+            is NetworkResult.Unsupported -> NetworkResult.Unsupported(result.featureName, result.reason)
+            is NetworkResult.Loading -> NetworkResult.Loading
         }
     }
 
@@ -152,10 +153,11 @@ class ChaquopyInstagramRepository(
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {
-                    result
+                    NetworkResult.Error(result.message, result.throwable, result.code)
                 }
             }
-            else -> result
+            is NetworkResult.Unsupported -> NetworkResult.Unsupported(result.featureName, result.reason)
+            is NetworkResult.Loading -> NetworkResult.Loading
         }
     }
 
@@ -193,10 +195,11 @@ class ChaquopyInstagramRepository(
                 if (cached.isNotEmpty()) {
                     NetworkResult.Success(cached.map { it.toDomain() })
                 } else {
-                    result
+                    NetworkResult.Error(result.message, result.throwable, result.code)
                 }
             }
-            else -> result
+            is NetworkResult.Unsupported -> NetworkResult.Unsupported(result.featureName, result.reason)
+            is NetworkResult.Loading -> NetworkResult.Loading
         }
     }
 
